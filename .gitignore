@@ -1,0 +1,7 @@
+output
+result
+*.png
+*.dat
+*.tmp
+test.rb
+.DS_Store
