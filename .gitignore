@@ -5,3 +5,6 @@ result
 *.tmp
 test.rb
 .DS_Store
+config.yml
+export
+old

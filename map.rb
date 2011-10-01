@@ -1,6 +1,12 @@
 require 'complex'
 include Math
 
+require 'yaml'
+
+if (!defined? CONFIG)
+  CONFIG = YAML.load_file('config.yml')
+end
+
 # find sign of given value. Returns +1, -1 or 0. For fixnum & float class
 class Float
   def sgn
@@ -28,14 +34,14 @@ class Fixnum
   end
 end
 
-class BaseMap
-end
+class EncounterMap
 
-class Map_TwoBody
+  attr_accessor :gamma
 
-  @@gamma = 8.0694*(10**-3)
-  @@masses = 5.178*(10**-5)
-  @@g = 2.23956667
+  @@masses = CONFIG['params']['masses'].to_f
+  @@g = CONFIG['constants']['g'].to_f
+  # Neptune
+  #@@masses = 5.178*(10**-5)
   
   attr_accessor :e_start
   attr_accessor :y0, :e0, :y_new, :e_new
@@ -44,18 +50,19 @@ class Map_TwoBody
   attr_accessor :c_file, :c_filename, :type
   attr_accessor :x_axe, :y_axe
   
-  def initialize(y_start = -0.2, y_end = 0.2, dist_limit = 100, limit = 500, type = 1, x_axe = 0.2, y_axe = 0.2)
+  def initialize(gamma = 0.114665, y_start = -0.2, y_end = 0.2, dist_limit = 100, limit = 500, type = 1, x_axe = 0.2, y_axe = 0.2)
+    @gamma = gamma
     @limit = limit
     @type  = type
     self.setInitial(y_start, y_end, dist_limit)
     if (type == 1)
-      @c_filename = @y_end.to_s+@y_start.to_s+'-'+@dist_limit.to_s+'-'+@limit.to_s
+      @c_filename = @gamma.to_s+'-'+@y_end.to_s+@y_start.to_s+'-'+@dist_limit.to_s+'-'+@limit.to_s
     else
       @c_filename = 'ln'+@y_end.to_s+@y_start.to_s+'-'+@dist_limit.to_s+'-'+@limit.to_s
     end
-    @c_file = File.new('output/'+@c_filename+'.dat', 'w')
+    @c_file = File.new(CONFIG['output']['dir']+'/'+@c_filename+'.dat', 'w')
     @c_file.puts "#--------------------------------------------------------------------------------------------------------"
-    @c_file.puts "#INITIAL DATAS: from y0 = #{@y_start} + 0*i to y_end = #{y_end} + 0*i, e0 = #{@e0}, gamma = #{@@gamma}, masses = #{@@masses}\r\n#STEP: #{@coeff}, ITERATION PER ONE DATA: #{@limit}, NUMBER OF STEPS: #{@dist_limit}"
+    @c_file.puts "#INITIAL DATAS: from y0 = #{@y_start} + 0*i to y_end = #{y_end} + 0*i, e0 = #{@e0}, gamma = #{@gamma}, masses = #{@@masses}\r\n#STEP: #{@coeff}, ITERATION PER ONE DATA: #{@limit}, NUMBER OF STEPS: #{@dist_limit}"
     @c_file.puts "#--------------------------------------------------------------------------------------------------------"
     
     @x_axe = x_axe
@@ -74,7 +81,7 @@ class Map_TwoBody
   end
   
   def calcE0
-      @e0 = Math.sqrt(4.0/3.0*(@@gamma + (@y0.abs)**2))
+    @e0 = Math.sqrt(4.0/3.0*(@gamma + (@y0.abs)**2))
   end
 
   def func_e(e)
@@ -95,8 +102,8 @@ class Map_TwoBody
   end
 
   def gnufile
-    gnu_file = File.new('output/'+@c_filename+'.gnu', 'w')
-    gnu_file.puts "set terminal png\r\nset datafile separator ','\r\nset xlabel 'Re(y)'\r\nset ylabel 'Im(y)'\r\nset xtic auto\r\nset ytic auto\r\nset xrange[-#{@x_axe}:#{@x_axe}]\r\nset yrange[-#{@y_axe}:#{@y_axe}]\r\nset pointsize 1.0\r\nset grid\r\nplot 'output/"+@c_filename+".dat' title 'Symplectic maps' with points 0 0"
+    gnu_file = File.new(CONFIG['output']['dir']+'/'+@c_filename+'.gnu', 'w')
+    gnu_file.puts "set term png size 600,600 font '/Library/Fonts/Microsoft/Calibri.ttf,15'\r\nset datafile separator ','\r\nset xlabel 'Re(y)'\r\nset ylabel 'Im(y)'\r\nset xtic auto\r\nset ytic auto\r\nset xrange[-#{@x_axe}:#{@x_axe}]\r\nset yrange[-#{@y_axe}:#{@y_axe}]\r\nset pointsize 1.0\r\nset grid\r\nplot '"+CONFIG['output']['dir']+"/"+@c_filename+".dat' notitle lt -1 lc -1 with dots"
     gnu_file.close
   end
 
@@ -128,17 +135,24 @@ class Map_TwoBody
   
   def distribution
     #puts "dist_limit = #{@dist_limit}"
+    @coeff = @coeff*2
+    @dist_limit = @dist_limit/2
     for j in 0..@dist_limit
       @y0 = Complex.new(@y_start+@coeff*j, 0.0)
+      self.calcE0
+      @e_start = @e0
+      self.calculate
+      @y0 = Complex.new(0.0, @y_start+@coeff*j)
       self.calcE0
       @e_start = @e0
       self.calculate
     end
     @c_file.close
     self.gnufile
-    tmp = @c_filename+'.gnu > output/'+@c_filename+'.png'
+    tmp = @c_filename+'.gnu > '+CONFIG['output']['dir']+'/'+@c_filename+'.png'
     tmp2 = @c_filename+'.png'
-    `gnuplot output/#{tmp}; open output/#{tmp2}`
+    `gnuplot #{CONFIG['output']['dir']}/#{tmp};`
+    `open #{CONFIG['output']['dir']}/#{tmp2}`
   end
   
 end

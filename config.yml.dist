@@ -1,0 +1,16 @@
+constants:
+  g: 2.23956667
+  
+params:
+  masses:  0.00005178
+  gamma:   0.0080694
+  y_start: -0.2
+  y_end:   0.2
+  distribution_limit: 600
+  iteration_limit:    400
+
+output:
+  dir:     export
+  gnuplot:
+    x_axis: 0.1
+    y_axis: 0.1
