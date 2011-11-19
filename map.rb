@@ -48,9 +48,9 @@ class EncounterMap
   attr_accessor :limit, :dist_limit, :coeff
   attr_accessor :y_start, :y_end 
   attr_accessor :c_file, :c_filename, :type
-  attr_accessor :x_axe, :y_axe
+  attr_accessor :x_axis_start, :y_axis_start
   
-  def initialize(gamma = 0.114665, y_start = -0.2, y_end = 0.2, dist_limit = 100, limit = 500, type = 1, x_axe = 0.2, y_axe = 0.2)
+  def initialize(gamma = 0.114665, y_start = -0.2, y_end = 0.2, dist_limit = 100, limit = 500, type = 1, x_axis_start = -0.2, y_axis_start = -0.2, x_axis_end = 0.2, y_axis_end = 0.2)
     @gamma = gamma
     @limit = limit
     @type  = type
@@ -65,8 +65,10 @@ class EncounterMap
     @c_file.puts "#INITIAL DATAS: from y0 = #{@y_start} + 0*i to y_end = #{y_end} + 0*i, e0 = #{@e0}, gamma = #{@gamma}, masses = #{@@masses}\r\n#STEP: #{@coeff}, ITERATION PER ONE DATA: #{@limit}, NUMBER OF STEPS: #{@dist_limit}"
     @c_file.puts "#--------------------------------------------------------------------------------------------------------"
     
-    @x_axe = x_axe
-    @y_axe = y_axe
+    @x_axis_start = x_axis_start
+    @y_axis_start = y_axis_start
+    @x_axis_end   = x_axis_end
+    @y_axis_end   = y_axis_end
   end
   
   def setInitial(y_start, y_end, dist_limit)
@@ -103,7 +105,7 @@ class EncounterMap
 
   def gnufile
     gnu_file = File.new(CONFIG['output']['dir']+'/'+@c_filename+'.gnu', 'w')
-    gnu_file.puts "set term png size 600,600 font '/Library/Fonts/Microsoft/Calibri.ttf,15'\r\nset datafile separator ','\r\nset xlabel 'Re(y)'\r\nset ylabel 'Im(y)'\r\nset xtic auto\r\nset ytic auto\r\nset xrange[-#{@x_axe}:#{@x_axe}]\r\nset yrange[-#{@y_axe}:#{@y_axe}]\r\nset pointsize 1.0\r\nset grid\r\nplot '"+CONFIG['output']['dir']+"/"+@c_filename+".dat' notitle lt -1 lc -1 with dots"
+    gnu_file.puts "set term png size 600,600 font '/Library/Fonts/Microsoft/Calibri.ttf,15'\r\nset datafile separator ','\r\nset xlabel 'Re(y)'\r\nset ylabel 'Im(y)'\r\nset xtic auto\r\nset ytic auto\r\nset xrange[#{@x_axis_start}:#{@x_axis_end}]\r\nset yrange[#{@y_axis_start}:#{@y_axis_end}]\r\nset pointsize 1.0\r\nset grid\r\nplot '"+CONFIG['output']['dir']+"/"+@c_filename+".dat' notitle lt -1 lc -1 with dots"
     gnu_file.close
   end
 
@@ -155,4 +157,18 @@ class EncounterMap
     `open #{CONFIG['output']['dir']}/#{tmp2}`
   end
   
+end
+
+def gamma_to_axis(gamma, ap = false)
+  aj   = 5.203363
+  aj   = ap if ap
+  eps  = (gamma/0.75)**0.5
+  axis = -aj*eps+aj
+end
+
+def axis_to_gamma(axis, ap = false)
+  aj    = 5.203363
+  aj    = ap if ap
+  eps   = (axis-aj)/aj
+  gamma = 0.75*eps*eps
 end

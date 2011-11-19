@@ -4,6 +4,8 @@ constants:
 params:
   masses:  0.00005178
   gamma:   0.0080694
+  axis:        4.0551608
+  planet_axis: 5.203363
   y_start: -0.2
   y_end:   0.2
   distribution_limit: 600
@@ -12,5 +14,8 @@ params:
 output:
   dir:     export
   gnuplot:
-    x_axis: 0.1
-    y_axis: 0.1
+    x_axis_start: -0.1
+    x_axis_end: 0.1
+    y_axis_start: -0.1
+    y_axis_end: 0.1
+  
