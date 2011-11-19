@@ -139,15 +139,14 @@ class EncounterMap
     #puts "dist_limit = #{@dist_limit}"
     @coeff = @coeff*2
     @dist_limit = @dist_limit/2
-    for j in 0..@dist_limit
-      @y0 = Complex.new(@y_start+@coeff*j, 0.0)
-      self.calcE0
-      @e_start = @e0
-      self.calculate
-      @y0 = Complex.new(0.0, @y_start+@coeff*j)
-      self.calcE0
-      @e_start = @e0
-      self.calculate
+    
+    for i in 0..@dist_limit
+      for j in 0..@dist_limit
+        @y0 = Complex.new(@y_start+@coeff*i, @y_start+@coeff*j)
+        self.calcE0
+        @e_start = @e0
+        self.calculate
+      end
     end
     @c_file.close
     self.gnufile
